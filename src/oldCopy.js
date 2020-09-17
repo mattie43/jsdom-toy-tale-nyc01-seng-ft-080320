@@ -1,6 +1,15 @@
 let addToy = false;
 
 document.addEventListener("DOMContentLoaded", () => {
+
+  const getAllToys = () => {
+    fetch('http://localhost:3000/toys')
+      .then(resp => resp.json())
+      .then(data => makeCard(data))
+  }
+
+  getAllToys()
+
   const addBtn = document.querySelector("#new-toy-btn");
   const toyFormContainer = document.querySelector(".container");
   addBtn.addEventListener("click", () => {
@@ -13,29 +22,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  const getAllToys = () => {
-    fetch('http://localhost:3000/toys')
-      .then(resp => resp.json())
-      .then(allToys => makeAllCards(allToys))
-  }
-
-  getAllToys()
-
-  const toyCollection = document.querySelector('#toy-collection')
-  function makeAllCards(allToys){
-    for (let i = 0; i < allToys.length; i++) {
-      const toy = allToys[i];
-      makeSingleCard(toy)
-    }
-  }
-
   const toyForm = document.querySelector('.add-toy-form')
   toyForm.addEventListener('submit', (e) => {
     e.preventDefault()
     let toyName = e.target.name.value
     let toyImage = e.target.image.value
     submitNewToy(toyName, toyImage)
-    toyForm.reset()
   })
 
   function submitNewToy(name, image){
@@ -51,30 +43,24 @@ document.addEventListener("DOMContentLoaded", () => {
         likes: 0
       })
     })
-    .then(resp => resp.json())
-    .then(singleToy => makeSingleCard(singleToy))
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(object) {
+      makeCard(object['id']);
+    })
   }
 
-  function makeSingleCard(toy) {
-    let newCard = document.createElement('div')
-    newCard.className = 'card'
-    newCard.dataset.toyId = toy.id
-    newCard.innerHTML = `
-    <h2>${toy.name}</h2>
-    <img src=${toy.image} class="toy-avatar" />
-    <p data-like-count=${toy.likes}>${toy.likes} Likes </p>
-    <button class="like-btn">Like <3</button>
-    `
-    toyCollection.appendChild(newCard)
-  }
-
+  
+  const toyCollection = document.querySelector('#toy-collection')
+  
+  
   toyCollection.addEventListener('click', (e) => {
-    // e.preventDefault()
+    e.preventDefault()
     if(e.target.className === 'like-btn'){
       const likeCount = e.target.parentNode.querySelector('p')
       const newLikeCount = parseInt(likeCount.dataset.likeCount) + 1
       likeCount.dataset.likeCount = newLikeCount
-      likeCount.innerText = newLikeCount + " Likes"
       addLikeToToy(e.target.parentNode.dataset.toyId, newLikeCount)
     }
   })
@@ -92,5 +78,19 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
+  function makeCard(data){
+    for(let toy of data){
+      let newCard = document.createElement('div')
+      newCard.className = 'card'
+      newCard.dataset.toyId = toy.id
+      newCard.innerHTML = `
+      <h2>${toy.name}</h2>
+      <img src=${toy.image} class="toy-avatar" />
+      <p data-like-count=${toy.likes}>${toy.likes} Likes </p>
+      <button class="like-btn">Like <3</button>
+      `
+      toyCollection.appendChild(newCard)
+    }
+  }
 
 });
